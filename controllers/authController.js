@@ -1,6 +1,8 @@
 const User = require("./../models/userModel");
 const { catchAsync } = require("./../utils/catchAsync");
 const jwt = require("jsonwebtoken");
+const { promisify } = require("util");
+const AppError = require("../utils/appError");
 
 // Helping Functions
 const generateToken = (id) => {
@@ -28,4 +30,43 @@ const signup = catchAsync(async (req, res, next) => {
   sendToken(newUser, 201, res);
 });
 
-module.exports = { signup };
+const login = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return next(new AppError("Please provide credentials", 400));
+  }
+  const user = await User.findOne({ email }).select("+password");
+
+  if (!user || !(await user.checkPassword(password, user.password))) {
+    return next(new AppError("Incorrect password or email", 401));
+  }
+
+  sendToken(user, 201, res);
+});
+
+const protect = catchAsync(async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  }
+
+  if (!token) {
+    return next(new AppError("You are not authorized. Please login", 401));
+  }
+  console.log(req.headers.authorization);
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  const freshUser = await User.findById(decoded.id);
+  if (!freshUser) {
+    return next(new AppError("The user does not exits", 401));
+  }
+
+  req.user = freshUser;
+  next();
+});
+
+module.exports = { signup, login, protect };

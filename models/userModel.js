@@ -13,6 +13,8 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, "Please tell us your email"],
+    unique: true,
+    lowercase: true,
     validate: [validator.isEmail, "Please provide a valid email"],
   },
   password: {
@@ -21,7 +23,10 @@ const userSchema = new mongoose.Schema({
     select: false,
     minLength: 8,
   },
+  location: String,
 });
+
+// *******Middlewares
 
 // Save password(hashed) to DB
 userSchema.pre("save", async function (next) {
@@ -29,6 +34,16 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
+
+// ********Methods
+
+// Password Checked
+userSchema.methods.checkPassword = async function (
+  givenPassword,
+  dbHashedPassword
+) {
+  return await bcrypt.compare(givenPassword, dbHashedPassword);
+};
 
 // Model
 const User = mongoose.model("User", userSchema);
