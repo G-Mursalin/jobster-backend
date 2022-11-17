@@ -26,12 +26,7 @@ const globalErrorController = (err, req, res, next) => {
   }
 
   if (err.code === 11000) {
-    error = new AppError(
-      `Duplicate field value ${err.message.match(
-        /(["'])(?:(?=(\\?))\2.)*?\1/g
-      )}. Please use another value!`,
-      400
-    );
+    error = new AppError(`This email already have an account`, 400);
 
     return sendResponse(error, res);
   }

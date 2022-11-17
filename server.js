@@ -8,7 +8,7 @@ process.on("uncaughtException", (err) => {
 const app = require("./app");
 dotenv.config({ path: "./config.env" });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 //Connect With MongoDB
 const db_url = process.env.DATABASE_URL.replace(
