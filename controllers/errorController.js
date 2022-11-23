@@ -6,6 +6,7 @@ const sendResponse = (error, res) => {
     return res.status(500).send({
       status: "error",
       message: "Something went wrong!",
+      error,
     });
   } else {
     return res.status(error.statusCode).send({
@@ -26,8 +27,7 @@ const globalErrorController = (err, req, res, next) => {
   }
 
   if (err.code === 11000) {
-    error = new AppError(`This email already have an account`, 400);
-
+    error = new AppError(`Email already in use`, 400);
     return sendResponse(error, res);
   }
 
@@ -35,6 +35,11 @@ const globalErrorController = (err, req, res, next) => {
     const errors = Object.values(err.errors).map((val) => val.message);
 
     error = new AppError(`Invalid Input Data. ${errors.join(". ")}`, 400);
+    return sendResponse(error, res);
+  }
+
+  if (err.name === "JsonWebTokenError") {
+    error = new AppError(`Forbidden Access`, 401);
     return sendResponse(error, res);
   }
 

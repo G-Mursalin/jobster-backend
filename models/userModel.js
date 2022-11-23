@@ -23,7 +23,10 @@ const userSchema = new mongoose.Schema({
     select: false,
     minLength: 8,
   },
-  location: String,
+  location: {
+    type: String,
+    default: "add your location",
+  },
 });
 
 // *******Middlewares

@@ -18,7 +18,9 @@ const updateMe = catchAsync(async (req, res, next) => {
     runValidators: true,
   });
   updatedUser.__v = undefined;
-  res.status(200).send({ status: "success", data: { user: updatedUser } });
+  res
+    .status(200)
+    .send({ status: "success", token: req.token, data: { user: updatedUser } });
 });
 
 module.exports = { updateMe };

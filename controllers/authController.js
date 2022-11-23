@@ -47,6 +47,7 @@ const login = catchAsync(async (req, res, next) => {
 
 const protect = catchAsync(async (req, res, next) => {
   let token;
+
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
@@ -55,17 +56,18 @@ const protect = catchAsync(async (req, res, next) => {
   }
 
   if (!token) {
-    return next(new AppError("You are not authorized. Please login", 401));
+    return next(new AppError("You are not authorized.Please login", 401));
   }
-  console.log(req.headers.authorization);
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
   const freshUser = await User.findById(decoded.id);
+
   if (!freshUser) {
     return next(new AppError("The user does not exits", 401));
   }
 
   req.user = freshUser;
+  req.token = token;
   next();
 });
 
