@@ -5,10 +5,15 @@ const {
   getAllJobs,
   deleteAJob,
   updateAJob,
+  getStats,
+  getMonthlyStats,
 } = require("./../controllers/jobController");
 
 // Routs
 const router = express.Router();
+
+router.get("/get-stats", protect, getStats);
+router.get("/get-monthly-stats", protect, getMonthlyStats);
 
 router.post("/add-job", protect, createAjob);
 router.get("/", protect, getAllJobs);

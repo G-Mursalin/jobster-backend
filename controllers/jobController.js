@@ -42,4 +42,103 @@ const updateAJob = catchAsync(async (req, res, next) => {
   });
 });
 
-module.exports = { createAjob, getAllJobs, deleteAJob, updateAJob };
+const getStats = catchAsync(async (req, res, next) => {
+  const stats = await Job.aggregate([
+    {
+      $match: {},
+    },
+    {
+      $group: {
+        _id: "$status",
+        numberOfTotalStats: { $sum: 1 },
+      },
+    },
+  ]);
+
+  res.status(200).send({
+    status: "success",
+    data: {
+      stats,
+    },
+  });
+});
+
+const getMonthlyStats = catchAsync(async (req, res, next) => {
+  // Calculate Date
+  function subtract6Months(currentDate) {
+    currentDate.setMonth(currentDate.getMonth() - 6);
+
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const date = String(currentDate.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${date}`;
+  }
+
+  const currentYear = new Date().getFullYear();
+  const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0");
+  const currentDate = String(new Date().getDate()).padStart(2, "0");
+
+  const sixMonthDateFromCurrentDate = subtract6Months(new Date());
+
+  const stats = await Job.aggregate([
+    {
+      $match: {
+        createAt: {
+          $gte: new Date(sixMonthDateFromCurrentDate),
+          $lte: new Date(`${currentYear}-${currentMonth}-${currentDate}`),
+        },
+      },
+    },
+    {
+      $group: {
+        _id: { $month: "$createAt" },
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { _id: 1 } },
+    {
+      $addFields: {
+        month: {
+          $let: {
+            vars: {
+              monthsInString: [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "July",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+              ],
+            },
+            in: {
+              $arrayElemAt: ["$$monthsInString", { $subtract: ["$_id", 1] }],
+            },
+          },
+        },
+      },
+    },
+  ]);
+
+  res.status(200).send({
+    status: "success",
+    data: {
+      stats,
+    },
+  });
+});
+
+module.exports = {
+  createAjob,
+  getAllJobs,
+  deleteAJob,
+  updateAJob,
+  getStats,
+  getMonthlyStats,
+};
