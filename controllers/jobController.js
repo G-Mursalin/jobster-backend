@@ -55,10 +55,13 @@ const getStats = catchAsync(async (req, res, next) => {
     },
   ]);
 
+  const statsObj = {};
+  stats.map((val) => (statsObj[val._id] = val.numberOfTotalStats));
+
   res.status(200).send({
     status: "success",
     data: {
-      stats,
+      stats: statsObj,
     },
   });
 });
@@ -74,19 +77,22 @@ const getMonthlyStats = catchAsync(async (req, res, next) => {
 
     return `${year}-${month}-${date}`;
   }
+  function add1Day(currentDate) {
+    currentDate.setDate(currentDate.getDate() + 1);
 
-  const currentYear = new Date().getFullYear();
-  const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0");
-  const currentDate = String(new Date().getDate()).padStart(2, "0");
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const date = String(currentDate.getDate()).padStart(2, "0");
 
-  const sixMonthDateFromCurrentDate = subtract6Months(new Date());
+    return `${year}-${month}-${date}`;
+  }
 
   const stats = await Job.aggregate([
     {
       $match: {
         createAt: {
-          $gte: new Date(sixMonthDateFromCurrentDate),
-          $lte: new Date(`${currentYear}-${currentMonth}-${currentDate}`),
+          $gte: new Date(subtract6Months(new Date())),
+          $lte: new Date(add1Day(new Date())),
         },
       },
     },
