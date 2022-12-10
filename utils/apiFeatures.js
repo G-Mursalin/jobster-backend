@@ -9,31 +9,28 @@ class APIFeatures {
     const excludedField = ["page", "sort", "limit", "fields"];
     excludedField.forEach((el) => delete queryObj[el]);
 
-    this.query = this.query.find(JSON.parse(queryObj));
+    if (queryObj.jobType === "all") delete queryObj["jobType"];
+    if (queryObj.status === "all") delete queryObj["status"];
+
+    this.query = this.query.find(queryObj);
+
     return this;
   }
 
   sort() {
     if (this.queryString.sort) {
-      const sortBy = this.queryString.sort.split(",").join(" ");
-      this.query = this.query.sort(sortBy);
-    }
-    return this;
-  }
-
-  filterLimiting() {
-    if (this.queryString.fields) {
-      const fields = this.queryString.fields.split(",").join(" ");
-      this.query = this.query.select(fields);
-    } else {
-      this.query = this.query.select("-__v");
+      const sortValue = this.queryString.sort;
+      if (sortValue === "latest") this.query = this.query.sort("-createAt");
+      if (sortValue === "oldest") this.query = this.query.sort("createAt");
+      else if (sortValue === "a-z") this.query = this.query.sort("position");
+      else if (sortValue === "z-a") this.query = this.query.sort("-position");
     }
     return this;
   }
 
   pagination() {
     const page = +this.queryString.page || 1;
-    const limit = +this.queryString.limit || 100;
+    const limit = 10;
     const skip = (page - 1) * limit;
     this.query = this.query.skip(skip).limit(limit);
     return this;

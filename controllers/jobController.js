@@ -1,6 +1,7 @@
 const AppError = require("../utils/appError");
 const { catchAsync } = require("./../utils/catchAsync");
 const Job = require("./../models/jobModel");
+const APIFeatures = require("../utils/apiFeatures");
 
 // Controllers
 const createAjob = catchAsync(async (req, res, next) => {
@@ -10,10 +11,30 @@ const createAjob = catchAsync(async (req, res, next) => {
 });
 
 const getAllJobs = catchAsync(async (req, res, next) => {
-  const jobs = await Job.find();
-  res
-    .status(200)
-    .send({ status: "success", results: jobs.length, data: { jobs } });
+  // const jobs = await Job.find();
+  const features = new APIFeatures(Job.find(), req.query)
+    .filter()
+    .sort()
+    .pagination();
+
+  const featuresFilter = new APIFeatures(Job.find(), req.query).filter();
+  const filtersQuery = await featuresFilter.query;
+  const totalJobs = filtersQuery.length;
+
+  const jobs = await features.query;
+  const page = req.query.page;
+  const numOfPages = Math.ceil(totalJobs / 10);
+
+  res.status(200).send({
+    status: "success",
+    results: jobs.length,
+    data: {
+      jobs,
+      totalJobs,
+      page,
+      numOfPages,
+    },
+  });
 });
 
 const deleteAJob = catchAsync(async (req, res, next) => {
@@ -98,7 +119,11 @@ const getMonthlyStats = catchAsync(async (req, res, next) => {
     },
     {
       $group: {
-        _id: { $month: "$createAt" },
+        // _id: { $month: "$createAt", year: "$createAt" },
+        _id: {
+          month: { $month: "$createAt" },
+          year: { $year: "$createAt" },
+        },
         count: { $sum: 1 },
       },
     },
@@ -124,9 +149,19 @@ const getMonthlyStats = catchAsync(async (req, res, next) => {
               ],
             },
             in: {
-              $arrayElemAt: ["$$monthsInString", { $subtract: ["$_id", 1] }],
+              $arrayElemAt: [
+                "$$monthsInString",
+                { $subtract: ["$_id.month", 1] },
+              ],
             },
           },
+        },
+      },
+    },
+    {
+      $addFields: {
+        monthYear: {
+          $concat: ["$month", "-", { $toString: "$_id.year" }],
         },
       },
     },
