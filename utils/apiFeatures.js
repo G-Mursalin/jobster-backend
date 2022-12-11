@@ -6,13 +6,18 @@ class APIFeatures {
 
   filter() {
     const queryObj = { ...this.queryString };
-    const excludedField = ["page", "sort", "limit", "fields"];
+    const excludedField = ["page", "sort", "limit", "fields", "search"];
     excludedField.forEach((el) => delete queryObj[el]);
 
     if (queryObj.jobType === "all") delete queryObj["jobType"];
     if (queryObj.status === "all") delete queryObj["status"];
 
     this.query = this.query.find(queryObj);
+    if (this.queryString.search) {
+      this.query = this.query.find({
+        position: { $regex: new RegExp(this.queryString.search) },
+      });
+    }
 
     return this;
   }

@@ -11,7 +11,6 @@ const createAjob = catchAsync(async (req, res, next) => {
 });
 
 const getAllJobs = catchAsync(async (req, res, next) => {
-  // const jobs = await Job.find();
   const features = new APIFeatures(Job.find(), req.query)
     .filter()
     .sort()
