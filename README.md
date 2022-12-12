@@ -18,6 +18,7 @@ Backend GitHub Repo Link: [https://github.com/G-Mursalin/jobster-backtend](https
 - Authentication is handled by the backend (expressJS, mongoDB)
 - Users can create their account
 - Users can create, update, and delete a job
+- Users can edit their profile data
 
 # Front-end Technology
 

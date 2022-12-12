@@ -25,8 +25,8 @@ class APIFeatures {
   sort() {
     if (this.queryString.sort) {
       const sortValue = this.queryString.sort;
-      if (sortValue === "latest") this.query = this.query.sort("-createAt");
-      if (sortValue === "oldest") this.query = this.query.sort("createAt");
+      if (sortValue === "latest") this.query = this.query.sort("-_id");
+      if (sortValue === "oldest") this.query = this.query.sort("_id");
       else if (sortValue === "a-z") this.query = this.query.sort("position");
       else if (sortValue === "z-a") this.query = this.query.sort("-position");
     }
